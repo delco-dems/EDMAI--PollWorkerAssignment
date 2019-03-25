@@ -1,4 +1,5 @@
 package edmai;
+
 import java.util.Map;
 
 public class Municipalities
@@ -6,10 +7,10 @@ public class Municipalities
 	Map<String, Municipality> municipalityMap;
 
 
-	Municipalities(NamedRange municipalityNamedRange) // NamedRange is invented object
+	Municipalities(NamedRange municipalityRange)
 	{
-		// load `municipalityList` from `municipalityNamedRange`
-		for (NamedRange.Row row : municipalityNamedRange)
+		// load `municipalityList` from `municipalityRange`
+		for (NamedRange.Row row : municipalityRange)
 		{
 			String name = row.column(1).toString();
 			Municipality muni = new Municipality(name, (int)row.column(2), (int)row.column(3));
@@ -30,6 +31,24 @@ public class Municipalities
 			this.name = name;
 			this.priority = priority;
 			this.zone = zone;
+		}
+
+
+		public String getName()
+		{
+			return (this.name);
+		}
+
+
+		public int getPriority()
+		{
+			return (this.priority);
+		}
+
+
+		public int getZone()
+		{
+			return (this.zone);
 		}
 	}
 

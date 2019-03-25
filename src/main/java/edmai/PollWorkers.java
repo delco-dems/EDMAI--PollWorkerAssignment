@@ -15,9 +15,9 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	Map<String, PollWorker> pollWorkerMap;
 
 
-	PollWorkers(NamedRange pollWorkersNamedRange, Polls polls, Municipalities municipalities)
+	PollWorkers(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities, Configuration configuration)
 	{
-		for (NamedRange.Row row : pollWorkersNamedRange)
+		for (NamedRange.Row row : pollWorkerRange)
 		{
 			String email = row.column(1).toString();
 			Municipality municipality = municipalities.get(row.column(5).toString());
@@ -52,18 +52,18 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		List<EdRole> edRoles;
 		TravelFlexibility travelFlexibility;
 		Poll homePoll; // only used if `travelFlexibility = MY_POLL_ONLY`
-		List<Integer> shifts;
+		List<Integer> shiftNumbers;
 
 
 		public PollWorker(	String email, Municipality municipality, List<EdRole> edRoles,
-							TravelFlexibility travelFlexibility, Poll homePoll, List<Integer> shifts)
+							TravelFlexibility travelFlexibility, Poll homePoll, List<Integer> shiftNumbers)
 		{
 			this.email = email;
 			this.municipality = municipality;
 			this.edRoles = edRoles;
 			this.travelFlexibility = travelFlexibility;
 			this.homePoll = homePoll;
-			this.shifts = shifts;
+			this.shiftNumbers = shiftNumbers;
 		}
 
 
@@ -75,20 +75,56 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		 */
 		public void assign(Poll poll)
 		{
-			// TODO: ??
+			// TODO: implement
+		}
+
+
+		public List<EdRole> getEdRoles()
+		{
+			return (this.edRoles);
+		}
+
+
+		public String getEmail()
+		{
+			return (this.email);
+		}
+
+
+		public Poll getHomePoll()
+		{
+			return (this.homePoll);
+		}
+
+
+		public Municipality getMunicipality()
+		{
+			return (this.municipality);
+		}
+
+
+		public List<Integer> getShiftNumbers()
+		{
+			return (this.shiftNumbers);
+		}
+
+
+		public TravelFlexibility getTravelFlexibility()
+		{
+			return (this.travelFlexibility);
 		}
 
 
 		/**
 		 * Returns a copy of this {@code PollWorker} with the lowest weight shift removed.
-		 * 
+		 *
 		 * @return
 		 */
 		public PollWorker removeLowestWeightShift()
 		{
 			PollWorker ret = null;
 
-			// TODO: ??
+			// TODO: implement
 
 			return (ret);
 		}
@@ -102,7 +138,7 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		{
 			TravelFlexibility ret = null;
 
-			// TODO: ??
+			// TODO: implement
 
 			return (ret);
 		}

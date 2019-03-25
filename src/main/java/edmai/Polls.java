@@ -1,40 +1,60 @@
 package edmai;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.joda.time.DateTime;
 
+import com.google.common.base.Objects;
+
 import edmai.Municipalities.Municipality;
 import edmai.PollWorkers.PollWorker;
+import edmai.Polls.Poll;
 
-public class Polls
+/**
+ * Defines the set of all {@link Poll} objects.
+ * <p>
+ * <b>IMPORTANT:</b> the contained polls are sorted by priority--first by the municipality priority
+ * and then if the municipality priorities are the same, by the busiest shift priority. By sorting
+ * the polls in this way, poll assignment is much more performant.
+ *
+ * @author Rob Oaks
+ */
+public class Polls implements Iterable<Poll>
 {
-	Map<String, Poll> pollMap;
+	Set<Poll> pollSet;
 	Configuration configuration;
 
 
-	Polls(NamedRange pollNamedRange, Municipalities municipalities, Configuration configuration)
+	Polls(NamedRange pollRange, Municipalities municipalities, Configuration configuration)
 	{
-		this.pollMap = new HashMap<>();
+		this.pollSet = new TreeSet<>();
 		this.configuration = configuration;
 
-		for (NamedRange.Row row : pollNamedRange)
+		for (NamedRange.Row row : pollRange)
 		{
 			Municipality muni = municipalities.get(row.column(1).toString());
 			String id = row.column(5).toString();
 			int busiestShiftNumSlots = (int)row.column(6);
 			int busiestShiftPriority = (int)row.column(7);
 			Poll poll = new Poll(muni, id, busiestShiftNumSlots, busiestShiftPriority);
-			this.pollMap.put(id, poll);
+			this.pollSet.add(poll);
 		}
 	}
 
 
-	public class Poll
+	/**
+	 * Defines a polling location and all of its attributes.
+	 * <p>
+	 * <b>IMPORTANT</b>: this class implements a comparator that first compares the priorities of
+	 * the associated municipalities and, if those priorities are the same, compares the priorities
+	 * of the busiest shift ({@code busiestShiftPriority}).
+	 *
+	 * @author Rob Oaks
+	 */
+	public class Poll implements Comparable<Poll>
 	{
 		Municipality municipality;
 		String identifier; // the dropdown value;
@@ -60,25 +80,22 @@ public class Polls
 		class Shift
 		{
 			int shiftNumber;
-			int totalSlots;
+			int priority;
 			int availableSlots;
 
 
-			Shift(int shiftNumber, int totalSlots)
+			Shift(int shiftNumber, int priority)
 			{
 				this.shiftNumber = shiftNumber;
-				this.totalSlots = totalSlots;
-				this.availableSlots = totalSlots;
+				this.priority = priority;
+				int busiestShiftNumSlots = Poll.this.getBusiestShiftNumSlots();
+				this.availableSlots = Polls.this.configuration.getShiftNumSlots(busiestShiftNumSlots, this.shiftNumber);
 			}
 
 
 			int getAvailableSlots()
 			{
-				int ret = 0;
-
-				// TODO: ??
-
-				return (ret);
+				return (this.availableSlots);
 			}
 
 
@@ -86,7 +103,7 @@ public class Polls
 			{
 				DateTime ret = null;
 
-				// TODO: ??
+				// TODO: needed?
 
 				return (ret);
 			}
@@ -94,11 +111,7 @@ public class Polls
 
 			int getPriority()
 			{
-				int ret = 0;
-
-				// TODO: ??
-
-				return (ret);
+				return (this.priority);
 			}
 
 
@@ -106,17 +119,7 @@ public class Polls
 			{
 				DateTime ret = null;
 
-				// TODO: ??
-
-				return (ret);
-			}
-
-
-			int getTotalSlots()
-			{
-				int ret = 0;
-
-				// TODO: ??
+				// TODO: needed?
 
 				return (ret);
 			}
@@ -124,38 +127,40 @@ public class Polls
 
 			boolean isFullyAssigned()
 			{
-				boolean ret = false;
-
-				// TODO: ??
+				boolean ret = (this.availableSlots == 0);
 
 				return (ret);
 			}
 
 
-			int reserveSlot()
+			boolean reserveSlot()
 			{
-				this.availableSlots--;
+				boolean ret = !this.isFullyAssigned();
 
-				return (this.availableSlots);
+				if (ret)
+				{
+					this.availableSlots--;
+				}
+
+				return (ret);
 			}
 		}
 
 
-		boolean areShiftsAvailable(int... shifts)
+		boolean areAllShiftsAvailable(List<Integer> shiftNumbers)
 		{
-			boolean ret = false;
+			boolean ret = true;
 
-			// TODO: are all of the specified shifts available for this poll?
+			for (int shiftNumber : shiftNumbers)
+			{
+				Shift shift = this.shiftList.get(shiftNumber);
 
-			return (ret);
-		}
-
-
-		List<Integer> availableShifts()
-		{
-			List<Integer> ret = null;
-
-			// TODO: return all available shifts for this poll
+				if (shift.isFullyAssigned())
+				{
+					ret = false;
+					break;
+				}
+			}
 
 			return (ret);
 		}
@@ -163,11 +168,81 @@ public class Polls
 
 		Municipality getMunicipality()
 		{
-			Municipality ret = null;
+			return (this.municipality);
+		}
 
-			// TODO: ??
+
+		@Override
+		public int compareTo(Poll other)
+		{
+			int ret;
+
+			if (other.getMunicipality().getPriority() > this.getMunicipality().getPriority())
+			{
+				ret = 1;
+			}
+			else if (other.getMunicipality().getPriority() < this.getMunicipality().getPriority())
+			{
+				ret = -1;
+			}
+			else
+			{
+				if (other.busiestShiftPriority > this.busiestShiftPriority)
+				{
+					ret = 1;
+				}
+				else if (other.busiestShiftPriority < this.busiestShiftPriority)
+				{
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
 
 			return (ret);
+		}
+
+
+		@Override
+		public boolean equals(final Object other)
+		{
+			if (!(other instanceof Poll))
+				return false;
+			Poll castOther = (Poll)other;
+			return Objects.equal(this.identifier, castOther.identifier);
+		}
+
+
+		public int getBusiestShiftNumSlots()
+		{
+			return (this.busiestShiftNumSlots);
+		}
+
+
+		public int getBusiestShiftPriority()
+		{
+			return (this.busiestShiftPriority);
+		}
+
+
+		public String getIdentifier()
+		{
+			return (this.identifier);
+		}
+
+
+		public List<Shift> getShiftList()
+		{
+			return (this.shiftList);
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			return Objects.hashCode(this.identifier);
 		}
 
 
@@ -187,156 +262,84 @@ public class Polls
 		 */
 		public boolean isProximate(int zone)
 		{
-			boolean ret = false;
-
-			// TODO: are all of the specified shifts available for this poll?
+			boolean ret = Polls.this.configuration.areZonesProximate(this.municipality.getZone(), zone);
 
 			return (ret);
 		}
 
 
-		public void reserveShifts(int... shifts)
+		public void reserveShifts(List<Integer> shiftNumbers)
 		{
-			/*
-			 * TODO: reserve all specified shifts for this poll if all shifts have
-			 * `this.isFullyAssigned = true`, set `this.isFullyAssigned = true` (will help
-			 * performance)
-			 */
+			boolean areAnyShiftsAvailable = false;
+
+			for (int shiftNumber : shiftNumbers)
+			{
+				Shift shift = this.shiftList.get(shiftNumber);
+				shift.reserveSlot();
+
+				boolean shiftFullyAssigned = shift.isFullyAssigned();
+
+				if (!shiftFullyAssigned)
+				{
+					areAnyShiftsAvailable = true;
+				}
+			}
+
+			this.isFullyAssigned = !areAnyShiftsAvailable;
 		}
 	}
 
 
-	/**
-	 * Returns a subset of {@code pollList} where each item has availability for all of the
-	 * {@code pollWorker} shifts.
-	 *
-	 * @param pollList
-	 * @param pollWorker
-	 * @return
-	 */
-	private List<Poll> getAvailablePollsForExactShifts(List<Poll> pollList, PollWorker pollWorker)
-	{
-		List<Poll> ret = null;
-
-		return (ret);
-	}
-
-
-	/**
-	 * Returns a subset of {@code pollList} where each item has availability for one or more of the
-	 * {@code pollWorker} shifts. If all of the {@code pollWorker} shifts are not available for any
-	 * of the polls {@code pollList}, then {@code pollWorker} shifts are removed one at a time
-	 * (lowest weight shifts are removed first) until all of those shifts are available.
-	 *
-	 * @param pollList
-	 * @param pollWorker
-	 * @return
-	 */
-	private List<Poll> getAvailablePollsForShifts(List<Poll> pollList, PollWorker pollWorker)
-	{
-		List<Poll> ret = new ArrayList<>();
-
-		PollWorker pw = pollWorker;
-		ret = this.getAvailablePollsForExactShifts(pollList, pw);
-
-		while (ret.isEmpty())
-		{
-			pw = pw.removeLowestWeightShift();
-			ret = this.getAvailablePollsForExactShifts(pollList, pw);
-		}
-
-		return (ret);
-	}
-
-
-	private Poll getHighestPriorityPoll(List<Poll> pollList)
+	private Poll getHighestPriorityProximateAvailablePoll(PollWorker pollWorker)
 	{
 		Poll ret = null;
 
-		// TODO: ??
+		for (Poll poll : this)
+		{
+			/*
+			 * Polls will automatically be traversed in priority order
+			 */
+			if (!poll.isFullyAssigned()
+				&& poll.isProximate(pollWorker.getMunicipality().getZone())
+				&& poll.areAllShiftsAvailable(pollWorker.getShiftNumbers()))
+			{
+				ret = poll;
+				break;
+			}
+		}
 
 		return (ret);
-	}
-
-
-	/**
-	 * Returns a list of {@code Poll} from {@code pollList} where
-	 * {@code poll.isProximateZone(pollWorker.getZone()) = true}
-	 *
-	 * @param pollList
-	 * @param pollWorker
-	 * @return
-	 */
-	private List<Poll> getProximatePolls(List<Poll> pollList, PollWorker pollWorker)
-	{
-		List<Poll> ret = null;
-
-		// TODO: ??
-
-		return (ret);
-	}
-
-
-	/**
-	 * Returns a list of {@code Poll} from {@code pollList} containing just the polls for which
-	 * {@code poll.isFullyAssigned = false}.
-	 *
-	 * @return
-	 */
-	private List<Poll> getUnassigned()
-	{
-		List<Poll> ret = null;
-
-		// TODO: ??
-
-		return (ret);
-	}
-
-
-	/**
-	 * Get {@code Poll} list for polls that 1) are "proximate" (i.e. meet zone proximity criteria),
-	 * 2) are not fully assigned, 3) have availability for all of the {@code PollWorker} slots
-	 * (check that entire poll is not fully assigned first for performance). If none are available
-	 * with all requested slots, then remove slots in ascending weight order and try again.
-	 *
-	 * @param pollWorker
-	 * @return
-	 */
-	private List<Poll> getUnassignedProximateAvailablePolls(PollWorker pollWorker)
-	{
-		List<Poll> unassignedPolls = this.getUnassigned();
-		List<Poll> unassignedProximatePolls = this.getProximatePolls(unassignedPolls, pollWorker);
-		List<Poll> ret =
-			this.getAvailablePollsForShifts(unassignedProximatePolls, pollWorker);
-
-		return (ret);
-	}
-
-
-	public Set<Map.Entry<String, Poll>> entrySet()
-	{
-		return (this.pollMap.entrySet());
 	}
 
 
 	public Poll get(String pollId)
 	{
-		Poll ret = this.pollMap.get(pollId);
+		Poll ret = null;
+
+		for (Poll poll : this.pollSet)
+		{
+			if (poll.identifier.equals(pollId))
+			{
+				ret = poll;
+				break;
+			}
+		}
+
 		return (ret);
 	}
 
 
-	public Set<String> keySet()
+	@Override
+	public Iterator<Poll> iterator()
 	{
-		return (this.pollMap.keySet());
+		return (this.pollSet.iterator());
 	}
 
 
 	public Poll reservePoll(PollWorker pollWorker)
 	{
-		List<Poll> availableProximatePolls = this.getUnassignedProximateAvailablePolls(pollWorker);
-
-		Poll ret = this.getHighestPriorityPoll(availableProximatePolls);
+		Poll ret = this.getHighestPriorityProximateAvailablePoll(pollWorker);
+		ret.reserveShifts(pollWorker.getShiftNumbers());
 
 		return (ret);
 	}

@@ -41,6 +41,24 @@ public class Configuration
 		}
 
 
+		public DateTime getEndTime()
+		{
+			return (this.endTime);
+		}
+
+
+		public String getInfo()
+		{
+			return (this.info);
+		}
+
+
+		public int getShiftNumber()
+		{
+			return (this.shiftNumber);
+		}
+
+
 		/**
 		 * Given a shift string (e.g. "6:45 AM - 10 AM"), return a shift number.
 		 *
@@ -51,9 +69,21 @@ public class Configuration
 		{
 			int ret = 0;
 
-			// TODO: ??
+			// TODO: implement
 
 			return (ret);
+		}
+
+
+		public DateTime getStartTime()
+		{
+			return (this.startTime);
+		}
+
+
+		public float getWeight()
+		{
+			return (this.weight);
 		}
 	}
 
@@ -104,7 +134,22 @@ public class Configuration
 	{
 		ZoneConfig zoneConfig = this.zoneConfigList.get(zone1);
 
-		boolean ret = zoneConfig.isZoneProximate(zone2)
+		boolean ret = zoneConfig.isZoneProximate(zone2);
+
+		return (ret);
+	}
+
+
+	public int getNumShifts()
+	{
+		return (this.numShifts);
+	}
+
+
+	public int getShiftNumSlots(int busiestShiftNumSlots, int shiftNumber)
+	{
+		float weight = this.shiftConfigList.get(shiftNumber).getWeight();
+		int ret = Math.round(weight * busiestShiftNumSlots);
 
 		return (ret);
 	}
