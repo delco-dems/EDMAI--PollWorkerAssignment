@@ -1,12 +1,12 @@
 package edmai;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.joda.time.DateTime;
-
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 
 import edmai.Municipalities.Municipality;
@@ -35,10 +35,10 @@ public class Polls implements Iterable<Poll>
 
 		for (NamedRange.Row row : pollRange)
 		{
-			Municipality muni = municipalities.get(row.column(1).toString());
-			String id = row.column(5).toString();
-			int busiestShiftNumSlots = (int)row.column(6);
-			int busiestShiftPriority = (int)row.column(7);
+			Municipality muni = municipalities.get(row.getColumn(1).toString());
+			String id = row.getColumn(5).toString();
+			int busiestShiftNumSlots = (int)row.getColumn(6);
+			int busiestShiftPriority = (int)row.getColumn(7);
 			Poll poll = new Poll(muni, id, busiestShiftNumSlots, busiestShiftPriority);
 			this.pollSet.add(poll);
 		}
@@ -71,9 +71,15 @@ public class Polls implements Iterable<Poll>
 			this.busiestShiftNumSlots = busiestShiftNumSlots;
 			this.busiestShiftPriority = busiestShiftPriority;
 
-			/*
-			 * TODO: construct `shiftList` using config shift weight info
-			 */
+			this.shiftList = new ArrayList<>();
+
+			for (int i = 0; i < Polls.this.configuration.getNumShifts(); i++)
+			{
+				float shiftWeight = Polls.this.configuration.getShiftWeight(i);
+				int shiftPriority = Math.round(shiftWeight * busiestShiftPriority);
+				Shift shift = new Shift(i, shiftPriority);
+				this.shiftList.add(shift);
+			}
 		}
 
 
@@ -89,7 +95,8 @@ public class Polls implements Iterable<Poll>
 				this.shiftNumber = shiftNumber;
 				this.priority = priority;
 				int busiestShiftNumSlots = Poll.this.getBusiestShiftNumSlots();
-				this.availableSlots = Polls.this.configuration.getShiftNumSlots(busiestShiftNumSlots, this.shiftNumber);
+				this.availableSlots =
+					Polls.this.configuration.calculateNumShiftSlots(this.shiftNumber, busiestShiftNumSlots);
 			}
 
 
@@ -99,29 +106,9 @@ public class Polls implements Iterable<Poll>
 			}
 
 
-			DateTime getEndTime()
-			{
-				DateTime ret = null;
-
-				// TODO: needed?
-
-				return (ret);
-			}
-
-
 			int getPriority()
 			{
 				return (this.priority);
-			}
-
-
-			DateTime getStartTime()
-			{
-				DateTime ret = null;
-
-				// TODO: needed?
-
-				return (ret);
 			}
 
 
@@ -239,6 +226,14 @@ public class Polls implements Iterable<Poll>
 		}
 
 
+		public String getShiftsString()
+		{
+			String ret = Joiner.on(',').join(this.shiftList);
+
+			return (ret);
+		}
+
+
 		@Override
 		public int hashCode()
 		{
@@ -253,11 +248,11 @@ public class Polls implements Iterable<Poll>
 
 
 		/**
-		 * Returns {@code true} if this poll's zone is proximate to the specified zone. Two zones
-		 * are proximate if {@link edmai.Configuration.ZoneConfig.isProximateZone(int, int)
-		 * ZoneConfig.isProximateZone} returns {@code true}.
+		 * Returns {@code true} if this poll's zoneNumber is proximate to the specified zoneNumber. Two zones
+		 * are proximate if {@link edmai.Configuration.Zone.isProximateZone(int, int)
+		 * Zone.isProximateZone} returns {@code true}.
 		 *
-		 * @param zone
+		 * @param zoneNumber
 		 * @return
 		 */
 		public boolean isProximate(int zone)
@@ -339,7 +334,11 @@ public class Polls implements Iterable<Poll>
 	public Poll reservePoll(PollWorker pollWorker)
 	{
 		Poll ret = this.getHighestPriorityProximateAvailablePoll(pollWorker);
-		ret.reserveShifts(pollWorker.getShiftNumbers());
+
+		if (ret != null)
+		{
+			ret.reserveShifts(pollWorker.getShiftNumbers());
+		}
 
 		return (ret);
 	}

@@ -1,37 +1,69 @@
 package edmai;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.joda.time.DateTime;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableBiMap;
 
+/**
+ * Defines classes and methods related to the information on the spreadsheet {@code Configuration}
+ * tab.
+ *
+ * @author Rob Oaks
+ */
 public class Configuration
 {
-	List<ShiftConfig> shiftConfigList;
-	List<ZoneConfig> zoneConfigList;
-	int proximateZoneDistance;
-	int numShifts;
+	private static final ImmutableBiMap<String, Integer> shiftMap =
+		ImmutableBiMap.<String, Integer> builder()
+			.put("6:45 AM - 10 AM", 0)
+			.put("10AM - 1 PM", 1)
+			.put("1 PM - 4 PM", 2)
+			.put("4 PM - 8 PM (includes staying for the vote count)", 3)
+			.build();
+
+	private final int numZones;
+	private final int proximateZoneDistance;
+	private final List<Zone> zoneList;
+
+	private final int numShifts;
+	private final List<ShiftConfig> shiftConfigList;
 
 
-	Configuration(	NamedRange proximateZoneDistanceRange, NamedRange zoneConfigRange, NamedRange numShiftsRange,
-					NamedRange shiftConfigRange)
+	/**
+	 * The ranges below correspond to ranges that defined in the spreadsheet.
+	 *
+	 * @param proximateZoneDistanceRange
+	 * @param zoneConfigRange
+	 * @param shiftConfigRange
+	 */
+	Configuration(NamedRange proximateZoneDistanceRange, NamedRange zoneConfigRange, NamedRange shiftConfigRange)
 	{
-		/*
-		 * TODO: read from `zoneConfigRange` and `shiftConfigRange` to construct `shiftConfigList`
-		 * and `zoneConfigList`. Set `proximateZoneDistance` and `numShifts` from respective ranges.
-		 */
+		this.numZones = zoneConfigRange.numRows();
+		this.proximateZoneDistance = (int)proximateZoneDistanceRange.getRow(0).getColumn(0);
+		this.zoneList = this.loadZoneList(zoneConfigRange);
+
+		this.numShifts = shiftConfigRange.numRows();
+		this.shiftConfigList = this.loadShiftConfigList(shiftConfigRange);
 	}
 
 
+	/**
+	 * Contains information corresponding to the spreadsheet {@code ShiftConfig} named range.
+	 *
+	 * @author Rob Oaks
+	 */
 	class ShiftConfig
 	{
 		int shiftNumber;
-		DateTime startTime;
-		DateTime endTime;
+		String startTime;
+		String endTime;
 		String info;
+
 		float weight;
 
 
-		public ShiftConfig(int shiftNumber, DateTime startTime, DateTime endTime, String info, float weight)
+		public ShiftConfig(int shiftNumber, String startTime, String endTime, String info, float weight)
 		{
 			this.shiftNumber = shiftNumber;
 			this.startTime = startTime;
@@ -41,7 +73,7 @@ public class Configuration
 		}
 
 
-		public DateTime getEndTime()
+		public String getEndTime()
 		{
 			return (this.endTime);
 		}
@@ -59,23 +91,7 @@ public class Configuration
 		}
 
 
-		/**
-		 * Given a shift string (e.g. "6:45 AM - 10 AM"), return a shift number.
-		 *
-		 * @param shiftString
-		 * @return
-		 */
-		public int getShiftNumber(String shiftString)
-		{
-			int ret = 0;
-
-			// TODO: implement
-
-			return (ret);
-		}
-
-
-		public DateTime getStartTime()
+		public String getStartTime()
 		{
 			return (this.startTime);
 		}
@@ -87,36 +103,47 @@ public class Configuration
 		}
 	}
 
-	class ZoneConfig
+	/**
+	 * Contains information corresponding to the spreadsheet {@code ZoneConfig} named range.
+	 *
+	 * @author Rob Oaks
+	 */
+	class Zone
 	{
-		int zone;
+		int zoneNumber;
 		List<Integer> proximityList;
 
 
-		public ZoneConfig(int zone, List<Integer> proximityList)
+		public Zone(int zoneNumber, List<Integer> proximityList)
 		{
-			this.zone = zone;
+			this.zoneNumber = zoneNumber;
 			this.proximityList = proximityList;
 		}
 
 
-		private int distanceInZones(int zone)
+		/**
+		 * Returns the zoneNumber distance between this {@code Zone} and the specified zoneNumber.
+		 *
+		 * @param zoneNumber
+		 * @return
+		 */
+		private int distanceInZones(int zoneNumber)
 		{
-			int ret = this.proximityList.get(zone);
+			int ret = this.proximityList.get(zoneNumber);
 
 			return (ret);
 		}
 
 
 		/**
-		 * Is this zone proximate to the specified zone?
+		 * Is this zoneNumber proximate to the specified zoneNumber?
 		 *
-		 * @param zone
+		 * @param zoneNumber
 		 * @return
 		 */
-		public boolean isZoneProximate(int zone)
+		public boolean isZoneProximate(int zoneNumber)
 		{
-			boolean ret = this.distanceInZones(zone) <= Configuration.this.proximateZoneDistance;
+			boolean ret = this.distanceInZones(zoneNumber) <= Configuration.this.proximateZoneDistance;
 
 			return (ret);
 		}
@@ -124,17 +151,118 @@ public class Configuration
 
 
 	/**
-	 * Are the two zones proximate?
+	 * Given a shift string (e.g. "6:45 AM - 10 AM"), return a shift number.
 	 *
-	 * @param zone1
-	 * @param zone2
+	 * @param shiftString
 	 * @return
 	 */
-	public boolean areZonesProximate(int zone1, int zone2)
+	public static int getShiftNumber(String shiftString)
 	{
-		ZoneConfig zoneConfig = this.zoneConfigList.get(zone1);
+		return (Configuration.shiftMap.get(shiftString));
+	}
 
-		boolean ret = zoneConfig.isZoneProximate(zone2);
+
+	/**
+	 * Given a multivalue shifts string (e.g. "6:45 AM - 10 AM, 10AM - 1 PM"), return a list of
+	 * shift numbers.
+	 *
+	 * @param shiftsString
+	 * @return
+	 */
+	public static List<Integer> getShiftNumbers(String shiftsString)
+	{
+		List<String> shiftStringList = Configuration.splitMultivalueString(shiftsString);
+
+		List<Integer> ret = new ArrayList<>();
+
+		for (String shiftString : shiftStringList)
+		{
+			ret.add(Configuration.getShiftNumber(shiftString));
+		}
+
+		return (ret);
+	}
+
+
+	public static List<String> splitMultivalueString(String multivalueString)
+	{
+		List<String> ret = Splitter.on(',').omitEmptyStrings().trimResults().splitToList(multivalueString);
+
+		return (ret);
+	}
+
+
+	private List<ShiftConfig> loadShiftConfigList(NamedRange shiftConfigRange)
+	{
+		List<ShiftConfig> ret = new ArrayList<>();
+
+		for (int i = 0; i < this.numShifts; i++)
+		{
+			String startTime = shiftConfigRange.getRow(i).getColumn(0).toString();
+			String endTime = shiftConfigRange.getRow(i).getColumn(1).toString();
+			String info = shiftConfigRange.getRow(i).getColumn(2).toString();
+			float weight = Float.parseFloat(shiftConfigRange.getRow(i).getColumn(3).toString());
+			ShiftConfig shiftConfig = new ShiftConfig(i, startTime, endTime, info, weight);
+			ret.add(shiftConfig);
+		}
+
+		return (ret);
+	}
+
+
+	private List<Zone> loadZoneList(NamedRange zoneConfigRange)
+	{
+		List<Zone> ret = new ArrayList<>();
+
+		for (int i = 0; i < this.numZones; i++)
+		{
+			List<Integer> proximityList = new ArrayList<>();
+
+			for (int j = 0; j < this.numZones; j++)
+			{
+				int proximity = Integer.parseInt(zoneConfigRange.getRow(i).getColumn(j).toString());
+				proximityList.add(proximity);
+			}
+
+			Zone zoneConfig = new Zone(i, proximityList);
+
+			ret.add(zoneConfig);
+		}
+
+		return (ret);
+	}
+
+
+	/**
+	 * Are the two zones proximate?
+	 *
+	 * @param zoneNumber1
+	 * @param zoneNumber2
+	 * @return
+	 */
+	public boolean areZonesProximate(int zoneNumber1, int zoneNumber2)
+	{
+		Zone zoneConfig = this.zoneList.get(zoneNumber1);
+
+		boolean ret = zoneConfig.isZoneProximate(zoneNumber2);
+
+		return (ret);
+	}
+
+
+	/**
+	 * Calculate the number of slots for the specified shift in accordance with the specified number
+	 * of slots allocated for the busiest shift. The calculation uses the <i>weight</i> of the
+	 * specified shift.
+	 *
+	 * @param shiftNumber
+	 * @param busiestShiftNumSlots
+	 * @return
+	 */
+	public int calculateNumShiftSlots(int shiftNumber, int busiestShiftNumSlots)
+	{
+		float weight = this.getShiftWeight(shiftNumber);
+		int ret = Math.round(weight * busiestShiftNumSlots);
 
 		return (ret);
 	}
@@ -146,10 +274,17 @@ public class Configuration
 	}
 
 
-	public int getShiftNumSlots(int busiestShiftNumSlots, int shiftNumber)
+	/**
+	 * Return the weight of the specified shift. Note that shift weights are always relative to the
+	 * other shifts at the associated poll; they do not relate to the weights of shifts at other
+	 * polls.
+	 *
+	 * @param shiftNumber
+	 * @return
+	 */
+	public float getShiftWeight(int shiftNumber)
 	{
-		float weight = this.shiftConfigList.get(shiftNumber).getWeight();
-		int ret = Math.round(weight * busiestShiftNumSlots);
+		float ret = this.shiftConfigList.get(shiftNumber).getWeight();
 
 		return (ret);
 	}

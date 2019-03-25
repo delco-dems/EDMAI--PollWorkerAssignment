@@ -2,6 +2,12 @@ package edmai;
 
 import java.util.Map;
 
+/**
+ * Container class for municipality info, including the municipality name, priority, and zoneNumber. A
+ * {@code Municipality} object can be retrieved by name.
+ *
+ * @author Rob Oaks
+ */
 public class Municipalities
 {
 	Map<String, Municipality> municipalityMap;
@@ -9,11 +15,10 @@ public class Municipalities
 
 	Municipalities(NamedRange municipalityRange)
 	{
-		// load `municipalityList` from `municipalityRange`
 		for (NamedRange.Row row : municipalityRange)
 		{
-			String name = row.column(1).toString();
-			Municipality muni = new Municipality(name, (int)row.column(2), (int)row.column(3));
+			String name = row.getColumn(0).toString();
+			Municipality muni = new Municipality(name, (int)row.getColumn(1), (int)row.getColumn(2));
 			this.municipalityMap.put(name, muni);
 		}
 	}
