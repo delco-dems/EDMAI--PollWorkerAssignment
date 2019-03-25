@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 
 import edmai.Municipalities.Municipality;
 import edmai.Polls.Poll;
@@ -34,6 +35,15 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	public enum EdRole
 	{
 		POLL_GREETER, POLL_WATCHER, ELECTION_PROTECTION, GOTV, DRIVER, WHATEVER, OTHER;
+
+		private static final ImmutableMap<String, EdRole> edRoleMap =
+			ImmutableMap.of("Poll Greeter", POLL_GREETER,
+				"Poll Watcher (Delco residents only)", POLL_WATCHER,
+				"Election Protection (must be an attorney, but don't need to live in Delco)", ELECTION_PROTECTION,
+				"GOTV (voter outreach on Election Day)", GOTV,
+				"Driver", DRIVER,
+				"Whatever you need me to do", WHATEVER);
+
 
 		public static EdRole from(String edRoleString)
 		{
