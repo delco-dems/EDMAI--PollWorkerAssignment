@@ -13,7 +13,7 @@ public class Edmai
 
 	private static void assignPollWorkerToPoll(NamedRange pollWorkerAssignmentRange, int index, Poll poll)
 	{
-		pollWorkerAssignmentRange.getRow(index).setColumn(0, poll.identifier);
+		pollWorkerAssignmentRange.getRow(index).setColumn(0, poll.getIdentifier());
 		pollWorkerAssignmentRange.getRow(index).setColumn(1, poll.getShiftsString());
 	}
 

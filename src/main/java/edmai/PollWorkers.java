@@ -11,6 +11,11 @@ import com.google.common.collect.ImmutableMap;
 import edmai.Municipalities.Municipality;
 import edmai.Polls.Poll;
 
+/**
+ * Defines the collection of all {@link PollWorker} objects.
+ *
+ * @author Rob Oaks
+ */
 public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 {
 	private final List<PollWorker> pollWorkerList;
@@ -19,31 +24,16 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 
 	PollWorkers(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities, Configuration configuration)
 	{
-		this.pollWorkerList = new ArrayList<>();
 		this.configuration = configuration;
-
-		for (NamedRange.Row row : pollWorkerRange)
-		{
-			String email = row.getColumn(0).toString();
-			Municipality municipality = municipalities.get(row.getColumn(4).toString());
-			List<EdRole> edRoles = splitEdRoles(row.getColumn(5).toString());
-			TravelFlexibility travelFlexibility = TravelFlexibility.from(row.getColumn(6).toString());
-
-			Poll homePoll = null;
-			Object homePollString = row.getColumn(7);
-			if (homePollString != null)
-			{
-				homePoll = polls.get(homePollString.toString());
-			}
-
-			List<Integer> shifts = PollWorkers.splitShifts(row.getColumn(8).toString());
-
-			PollWorker pollWorker = new PollWorker(email, municipality, edRoles, travelFlexibility, homePoll, shifts);
-			this.pollWorkerList.add(pollWorker);
-		}
+		this.pollWorkerList = this.loadPollWorkerList(pollWorkerRange, polls, municipalities);
 	}
 
 
+	/**
+	 * The volunteer roles that are defined for Election Day.
+	 *
+	 * @author Rob Oaks
+	 */
 	public enum EdRole
 	{
 		POLL_GREETER, POLL_WATCHER, ELECTION_PROTECTION, GOTV, DRIVER, WHATEVER, OTHER;
@@ -59,6 +49,12 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 				.build();
 
 
+		/**
+		 * Return an {@code EdRole} for the specified role string.
+		 *
+		 * @param edRoleString
+		 * @return
+		 */
 		public static EdRole from(String edRoleString)
 		{
 			EdRole ret = EdRole.edRoleMap.get(edRoleString);
@@ -71,6 +67,19 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		}
 	}
 
+	/**
+	 * Defines a poll worker and all of his/her attributes including:
+	 * <ul>
+	 * <li>Email address (uniquely identifies a poll worker)
+	 * <li>{@link Municipality}
+	 * <li>Desired roles ({@link EdRole})
+	 * <li>{@link TravelFlexibility}
+	 * <li>Home poll--the poll at which the poll worker votes
+	 * <li>Desired shifts to be worked
+	 * </ul>
+	 *
+	 * @author Rob Oaks
+	 */
 	public class PollWorker
 	{
 		String email;
@@ -165,6 +174,16 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		}
 	}
 
+	/**
+	 * Characterizes the travel flexibility of a poll worker including:
+	 * <ul>
+	 * <li>Willing to travel anywhere in the county
+	 * <li>Willing to travel anywhere in my municipality
+	 * <li>Only willing to work at my polling location
+	 * </ul>
+	 *
+	 * @author Rob Oaks
+	 */
 	public enum TravelFlexibility
 	{
 		ANYWHERE_IN_COUNTY, ANYWHERE_IN_MUNICIPALITY, MY_POLL_ONLY;
@@ -177,6 +196,12 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 				.build();
 
 
+		/**
+		 * Return the {@code TravelFlexibility} for the specified travel flexibility string.
+		 *
+		 * @param travelFlexibilityString
+		 * @return
+		 */
 		public static TravelFlexibility from(String travelFlexibilityString)
 		{
 			TravelFlexibility ret = TravelFlexibility.travelFlexibilityMap.get(travelFlexibilityString);
@@ -186,6 +211,12 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	}
 
 
+	/**
+	 * Given a comma-separated list of roles, returns the corresponding {@link EdRole} list.
+	 *
+	 * @param edRolesString
+	 * @return
+	 */
 	private static List<EdRole> splitEdRoles(String edRolesString)
 	{
 		List<String> roleStringList = Configuration.splitMultivalueString(edRolesString);
@@ -214,9 +245,37 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	}
 
 
+	private List<PollWorker> loadPollWorkerList(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities)
+	{
+		List<PollWorker> ret = new ArrayList<>();
+
+		for (NamedRange.Row row : pollWorkerRange)
+		{
+			String email = row.getColumn(0).toString();
+			Municipality municipality = municipalities.get(row.getColumn(4).toString());
+			List<EdRole> edRoles = splitEdRoles(row.getColumn(5).toString());
+			TravelFlexibility travelFlexibility = TravelFlexibility.from(row.getColumn(6).toString());
+
+			Poll homePoll = null;
+			Object homePollString = row.getColumn(7);
+			if (homePollString != null)
+			{
+				homePoll = polls.get(homePollString.toString());
+			}
+
+			List<Integer> shifts = PollWorkers.splitShifts(row.getColumn(8).toString());
+
+			PollWorker pollWorker = new PollWorker(email, municipality, edRoles, travelFlexibility, homePoll, shifts);
+			ret.add(pollWorker);
+		}
+
+		return (ret);
+	}
+
+
 	@Override
 	public Iterator<PollWorker> iterator()
 	{
-		return null;
+		return (this.pollWorkerList.iterator());
 	}
 }
