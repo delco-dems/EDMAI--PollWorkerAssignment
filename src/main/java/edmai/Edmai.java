@@ -11,7 +11,17 @@ public class Edmai
 	private static PollWorkers pollWorkers;
 
 
-	private static void assignPollWorkerToPoll(NamedRange pollWorkerAssignmentRange, int index, Poll poll)
+	/**
+	 * For the specified {@code Assignment} sheet row index, updates the {@code Poll--Calculated}
+	 * and {@code Shifts--Calculated} columns in accordance with the specified {@link Poll}.
+	 * <p>
+	 * NOTE: this is a mock implementation.
+	 *
+	 * @param pollWorkerAssignmentRange
+	 * @param index
+	 * @param poll
+	 */
+	private static void updateAssignmentColumns(NamedRange pollWorkerAssignmentRange, int index, Poll poll)
 	{
 		pollWorkerAssignmentRange.getRow(index).setColumn(0, poll.getIdentifier());
 		pollWorkerAssignmentRange.getRow(index).setColumn(1, poll.getShiftsString());
@@ -32,12 +42,21 @@ public class Edmai
 		NamedRange pollWorkerRange = (NamedRange)args[5];
 		NamedRange pollWorkerAssignmentRange = (NamedRange)args[6];
 
+		/*
+		 * Create the Configuration and collections
+		 */
 		Edmai.configuration =
 			new Configuration(proximateZoneDistanceRange, zoneConfigRange, shiftConfigRange);
 		Edmai.municipalities = new Municipalities(municipalityRange);
 		Edmai.polls = new Polls(pollRange, Edmai.municipalities, Edmai.configuration);
 		Edmai.pollWorkers = new PollWorkers(pollWorkerRange, Edmai.polls, Edmai.municipalities, Edmai.configuration);
 
+		/*
+		 * For each poll worker, reserve a poll and update the assignment columns in accordance with
+		 * the reserved poll. For a give poll worker, if a poll cannot be reserved for the desired
+		 * shifts, remove the lowest weight shift and try again until a poll can be reserved or no
+		 * more polls are available.
+		 */
 		int index = 0;
 		for (PollWorker pollWorker : Edmai.pollWorkers)
 		{
@@ -50,7 +69,7 @@ public class Edmai
 				poll = Edmai.polls.reservePoll(pw);
 				if (poll != null)
 				{
-					Edmai.assignPollWorkerToPoll(pollWorkerAssignmentRange, index, poll);
+					Edmai.updateAssignmentColumns(pollWorkerAssignmentRange, index, poll);
 				}
 				else
 				{

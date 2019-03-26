@@ -25,7 +25,7 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	PollWorkers(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities, Configuration configuration)
 	{
 		this.configuration = configuration;
-		this.pollWorkerList = this.loadPollWorkerList(pollWorkerRange, polls, municipalities);
+		this.pollWorkerList = this.createPollWorkerList(pollWorkerRange, polls, municipalities);
 	}
 
 
@@ -231,6 +231,13 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	}
 
 
+	/**
+	 * Given a comma-separated list of shift strings, returns the corresponding list of shift
+	 * numbers.
+	 *
+	 * @param shiftString
+	 * @return
+	 */
 	private static List<Integer> splitShifts(String shiftsString)
 	{
 		List<String> shiftStringList = Configuration.splitMultivalueString(shiftsString);
@@ -245,7 +252,15 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	}
 
 
-	private List<PollWorker> loadPollWorkerList(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities)
+	/**
+	 * Creates the poll worker list for the specified poll worker named range.
+	 *
+	 * @param pollWorkerRange
+	 * @param polls
+	 * @param municipalities
+	 * @return
+	 */
+	private List<PollWorker> createPollWorkerList(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities)
 	{
 		List<PollWorker> ret = new ArrayList<>();
 

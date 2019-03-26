@@ -3,8 +3,7 @@ package edmai;
 import java.util.Map;
 
 /**
- * Container class for municipality info, including the municipality name, priority, and zoneNumber. A
- * {@code Municipality} object can be retrieved by name.
+ * The collection of all {@link Municipality} objects.
  *
  * @author Rob Oaks
  */
@@ -24,6 +23,11 @@ public class Municipalities
 	}
 
 
+	/*
+	 * Defines a municipality including the municipality name, priority, and zone number.
+	 *
+	 * @author Rob Oaks
+	 */
 	public class Municipality
 	{
 		String name;
@@ -58,6 +62,12 @@ public class Municipalities
 	}
 
 
+	/**
+	 * Returns the {@link Municipality} for the specified municipality name.
+	 *
+	 * @param name
+	 * @return
+	 */
 	Municipality get(String name)
 	{
 		Municipality ret = this.municipalityMap.get(name);
