@@ -136,7 +136,7 @@ public class Configuration
 
 
 		/**
-		 * Is this zoneNumber proximate to the specified zoneNumber?
+		 * Is this zone proximate to the specified zone?
 		 *
 		 * @param zoneNumber
 		 * @return
@@ -263,6 +263,23 @@ public class Configuration
 	{
 		float weight = this.getShiftWeight(shiftNumber);
 		int ret = Math.round(weight * busiestShiftNumSlots);
+
+		return (ret);
+	}
+
+
+	/**
+	 * Calculate the priority of the specified shift in accordance with the specified priority of
+	 * the busiest shift. The calculation uses the <i>weight</i> of the specified shift.
+	 *
+	 * @param shiftNumber
+	 * @param busiestShiftPriority
+	 * @return
+	 */
+	public int calculateShiftPriority(int shiftNumber, int busiestShiftPriority)
+	{
+		float weight = this.getShiftWeight(shiftNumber);
+		int ret = Math.round(weight * busiestShiftPriority);
 
 		return (ret);
 	}

@@ -1,0 +1,29 @@
+# =========================
+# Build System Files
+# =========================
+.gradle/
+
+# =========================
+# Eclipse Files
+# =========================
+bin/edmai/
+
+# =========================
+# Temp and Archive Files
+# =========================
+~*.*
+Tmp/
+Archive/
+
+# =========================
+# Operating System Files
+# =========================
+Desktop.ini
+Thumbs.db
+$RECYCLE.BIN/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
