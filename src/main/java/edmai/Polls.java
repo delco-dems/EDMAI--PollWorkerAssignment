@@ -28,12 +28,12 @@ public class Polls implements Iterable<Poll>
 	Configuration configuration;
 
 
-	Polls(NamedRange pollRange, Municipalities municipalities, Configuration configuration)
+	Polls(Range pollRange, Municipalities municipalities, Configuration configuration)
 	{
 		this.pollSet = new TreeSet<>();
 		this.configuration = configuration;
 
-		for (NamedRange.Row row : pollRange)
+		for (Range.Row row : pollRange)
 		{
 			Municipality muni = municipalities.get(row.getColumn(1).toString());
 			String id = row.getColumn(5).toString();
@@ -179,6 +179,29 @@ public class Polls implements Iterable<Poll>
 				int shiftPriority = Polls.this.configuration.calculateShiftPriority(i, busiestShiftPriority);
 				Shift shift = new Shift(i, shiftPriority);
 				this.shiftList.add(shift);
+			}
+
+			return (ret);
+		}
+
+
+		private boolean meetsTravelFlexibilityRequirements(PollWorker pollWorker)
+		{
+			boolean ret = false;
+
+			switch (pollWorker.getTravelFlexibility())
+			{
+			case ANYWHERE_IN_COUNTY:
+				ret = true;
+				break;
+
+			case ANYWHERE_IN_MUNICIPALITY:
+				ret = this.getMunicipality().equals(pollWorker.getMunicipality());
+				break;
+
+			case MY_POLL_ONLY:
+				ret = this.equals(pollWorker.getHomePoll());
+				break;
 			}
 
 			return (ret);
@@ -361,17 +384,18 @@ public class Polls implements Iterable<Poll>
 
 
 	/**
-	 * For the specified {@link PollWorker}, returns the highest priority poll that meets the
-	 * following criteria:
+	 * For the specified {@link PollWorker}, returns the highest priority poll that meets all of the
+	 * poll worker's requirements including:
 	 * <ol>
 	 * <li>Proximate to the poll worker's municipality
+	 * <li>Meets the poll worker's travel flexibility needs
 	 * <li>Has slots available for all of the poll worker's requested shifts
 	 * </ol>
 	 *
 	 * @param pollWorker
 	 * @return
 	 */
-	private Poll getHighestPriorityProximateAvailablePoll(PollWorker pollWorker)
+	private Poll getHighestPriorityPollMeetingAllRequirements(PollWorker pollWorker)
 	{
 		Poll ret = null;
 
@@ -383,6 +407,7 @@ public class Polls implements Iterable<Poll>
 		{
 			if (!poll.isFullyAssigned()
 				&& poll.isProximate(pollWorker.getMunicipality().getZone())
+				&& poll.meetsTravelFlexibilityRequirements(pollWorker)
 				&& poll.areSpecifiedShiftsAvailable(pollWorker.getShiftNumbers()))
 			{
 				ret = poll;
@@ -441,7 +466,7 @@ public class Polls implements Iterable<Poll>
 	 */
 	public Poll reservePoll(PollWorker pollWorker)
 	{
-		Poll ret = this.getHighestPriorityProximateAvailablePoll(pollWorker);
+		Poll ret = this.getHighestPriorityPollMeetingAllRequirements(pollWorker);
 
 		if (ret != null)
 		{
