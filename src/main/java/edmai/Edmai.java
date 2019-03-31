@@ -31,16 +31,20 @@ public class Edmai
 	public static void main(Object[] args)
 	{
 		/*
-		 * For mocking purposes, load several `Range` objects from the command line. In reality,
-		 * these named ranges will come directly from the spreadsheet.
+		 * TODO: replace the code below, which assumes that `GoogleRange` objects are passed on the
+		 * command line, with the actual code to get the actual Google `Range` objects directly from
+		 * the spreadsheet. For example, replace the line below with something like:
+		 *
+		 * var proximateZoneDistanceRange = new
+		 * Range(SpreadsheetApp.getActive().getRange('ProximateZoneDistance'));
 		 */
-		Range proximateZoneDistanceRange = (Range)args[0];
-		Range zoneConfigRange = (Range)args[1];
-		Range shiftConfigRange = (Range)args[2];
-		Range municipalityRange = (Range)args[3];
-		Range pollRange = (Range)args[4];
-		Range pollWorkerRange = (Range)args[5];
-		Range pollWorkerAssignmentRange = (Range)args[6];
+		Range proximateZoneDistanceRange = new Range((GoogleRange)args[0]);
+		Range zoneConfigRange = new Range((GoogleRange)args[1]);
+		Range shiftConfigRange = new Range((GoogleRange)args[2]);
+		Range municipalityRange = new Range((GoogleRange)args[3]);
+		Range pollRange = new Range((GoogleRange)args[4]);
+		Range pollWorkerRange = new Range((GoogleRange)args[5]);
+		Range pollWorkerAssignmentRange = new Range((GoogleRange)args[6]);
 
 		/*
 		 * Create the Configuration and collections
