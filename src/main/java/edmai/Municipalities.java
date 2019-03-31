@@ -2,6 +2,8 @@ package edmai;
 
 import java.util.Map;
 
+import com.google.common.base.Objects;
+
 /**
  * The collection of all {@link Municipality} objects.
  *
@@ -12,9 +14,9 @@ public class Municipalities
 	Map<String, Municipality> municipalityMap;
 
 
-	Municipalities(NamedRange municipalityRange)
+	Municipalities(Range municipalityRange)
 	{
-		for (NamedRange.Row row : municipalityRange)
+		for (Range.Row row : municipalityRange)
 		{
 			String name = row.getColumn(0).toString();
 			Municipality muni = new Municipality(name, (int)row.getColumn(1), (int)row.getColumn(2));
@@ -43,6 +45,16 @@ public class Municipalities
 		}
 
 
+		@Override
+		public boolean equals(final Object other)
+		{
+			if (!(other instanceof Municipality))
+				return false;
+			Municipality castOther = (Municipality)other;
+			return Objects.equal(this.name, castOther.name);
+		}
+
+
 		public String getName()
 		{
 			return (this.name);
@@ -58,6 +70,13 @@ public class Municipalities
 		public int getZone()
 		{
 			return (this.zone);
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			return Objects.hashCode(this.name);
 		}
 	}
 

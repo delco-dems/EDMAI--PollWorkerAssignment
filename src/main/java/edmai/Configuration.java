@@ -37,7 +37,7 @@ public class Configuration
 	 * @param zoneConfigRange
 	 * @param shiftConfigRange
 	 */
-	Configuration(NamedRange proximateZoneDistanceRange, NamedRange zoneConfigRange, NamedRange shiftConfigRange)
+	Configuration(Range proximateZoneDistanceRange, Range zoneConfigRange, Range shiftConfigRange)
 	{
 		this.numZones = zoneConfigRange.numRows();
 		this.proximateZoneDistance = (int)proximateZoneDistanceRange.getRow(0).getColumn(0);
@@ -192,7 +192,7 @@ public class Configuration
 	}
 
 
-	private List<ShiftConfig> loadShiftConfigList(NamedRange shiftConfigRange)
+	private List<ShiftConfig> loadShiftConfigList(Range shiftConfigRange)
 	{
 		List<ShiftConfig> ret = new ArrayList<>();
 
@@ -210,7 +210,7 @@ public class Configuration
 	}
 
 
-	private List<Zone> loadZoneList(NamedRange zoneConfigRange)
+	private List<Zone> loadZoneList(Range zoneConfigRange)
 	{
 		List<Zone> ret = new ArrayList<>();
 

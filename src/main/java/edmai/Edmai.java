@@ -21,7 +21,7 @@ public class Edmai
 	 * @param index
 	 * @param poll
 	 */
-	private static void updateAssignmentColumns(NamedRange pollWorkerAssignmentRange, int index, Poll poll)
+	private static void updateAssignmentColumns(Range pollWorkerAssignmentRange, int index, Poll poll)
 	{
 		pollWorkerAssignmentRange.getRow(index).setColumn(0, poll.getIdentifier());
 		pollWorkerAssignmentRange.getRow(index).setColumn(1, poll.getShiftsString());
@@ -31,16 +31,16 @@ public class Edmai
 	public static void main(Object[] args)
 	{
 		/*
-		 * For mocking purposes, load several `NamedRange` objects from the command line. In
-		 * reality, these named ranges will come directly from the spreadsheet.
+		 * For mocking purposes, load several `Range` objects from the command line. In reality,
+		 * these named ranges will come directly from the spreadsheet.
 		 */
-		NamedRange proximateZoneDistanceRange = (NamedRange)args[0];
-		NamedRange zoneConfigRange = (NamedRange)args[1];
-		NamedRange shiftConfigRange = (NamedRange)args[2];
-		NamedRange municipalityRange = (NamedRange)args[3];
-		NamedRange pollRange = (NamedRange)args[4];
-		NamedRange pollWorkerRange = (NamedRange)args[5];
-		NamedRange pollWorkerAssignmentRange = (NamedRange)args[6];
+		Range proximateZoneDistanceRange = (Range)args[0];
+		Range zoneConfigRange = (Range)args[1];
+		Range shiftConfigRange = (Range)args[2];
+		Range municipalityRange = (Range)args[3];
+		Range pollRange = (Range)args[4];
+		Range pollWorkerRange = (Range)args[5];
+		Range pollWorkerAssignmentRange = (Range)args[6];
 
 		/*
 		 * Create the Configuration and collections
@@ -80,5 +80,8 @@ public class Edmai
 
 			index++;
 		}
+
+		// Save all poll worker assignments back to the Google sheet
+		pollWorkerAssignmentRange.save();
 	}
 }

@@ -22,7 +22,7 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	private final Configuration configuration;
 
 
-	PollWorkers(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities, Configuration configuration)
+	PollWorkers(Range pollWorkerRange, Polls polls, Municipalities municipalities, Configuration configuration)
 	{
 		this.configuration = configuration;
 		this.pollWorkerList = this.createPollWorkerList(pollWorkerRange, polls, municipalities);
@@ -260,11 +260,11 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 	 * @param municipalities
 	 * @return
 	 */
-	private List<PollWorker> createPollWorkerList(NamedRange pollWorkerRange, Polls polls, Municipalities municipalities)
+	private List<PollWorker> createPollWorkerList(Range pollWorkerRange, Polls polls, Municipalities municipalities)
 	{
 		List<PollWorker> ret = new ArrayList<>();
 
-		for (NamedRange.Row row : pollWorkerRange)
+		for (Range.Row row : pollWorkerRange)
 		{
 			String email = row.getColumn(0).toString();
 			Municipality municipality = municipalities.get(row.getColumn(4).toString());
