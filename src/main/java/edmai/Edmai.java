@@ -1,5 +1,6 @@
 package edmai;
 
+import edmai.PollWorkers.EdRole;
 import edmai.PollWorkers.PollWorker;
 import edmai.Polls.Poll;
 
@@ -64,6 +65,12 @@ public class Edmai
 		int index = 0;
 		for (PollWorker pollWorker : Edmai.pollWorkers)
 		{
+			if (!pollWorker.getEdRoles().contains(EdRole.POLL_GREETER)
+				&& !pollWorker.getEdRoles().contains(EdRole.POLL_WATCHER))
+			{
+				continue;
+			}
+
 			PollWorker pw = pollWorker;
 			Poll poll = null;
 			boolean pollWorkerHasExtraShifts = true;
