@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import edmai.Municipalities.Municipality;
@@ -129,6 +130,19 @@ public class PollWorkers implements Iterable<PollWorkers.PollWorker>
 		public List<Integer> getShiftNumbers()
 		{
 			return (this.shiftNumbers);
+		}
+
+
+		/**
+		 * Returns a string representation of the poll worker's shift numbers.
+		 *
+		 * @return
+		 */
+		public String getShiftsString()
+		{
+			String ret = Joiner.on(',').join(this.shiftNumbers);
+
+			return (ret);
 		}
 
 

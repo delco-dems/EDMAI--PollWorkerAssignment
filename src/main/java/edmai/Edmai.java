@@ -22,10 +22,11 @@ public class Edmai
 	 * @param index
 	 * @param poll
 	 */
-	private static void updateAssignmentColumns(Range pollWorkerAssignmentRange, int index, Poll poll)
+	private static void updateAssignmentColumns(Range pollWorkerAssignmentRange, int index, Poll poll,
+		PollWorker pollWorker)
 	{
 		pollWorkerAssignmentRange.getRow(index).setColumn(0, poll.getIdentifier());
-		pollWorkerAssignmentRange.getRow(index).setColumn(1, poll.getShiftsString());
+		pollWorkerAssignmentRange.getRow(index).setColumn(1, pollWorker.getShiftsString());
 	}
 
 
